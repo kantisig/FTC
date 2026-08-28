@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทฤษฎีบทมูลฐานของแคลคูลัส (FTC)</title>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- MathJax v3 -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            chtml: { displayAlign: 'center' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        /* Light Theme (Default) */
+        :root {
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --control-bg: #f1f5f9;
+            --text: #1e293b;
+            --text-title: #0f172a;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --primary: #2563eb;
+            --primary-bg: #eff6ff;
+            --accent: #dc2626;
+            --accent-bg: #fef2f2;
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --control-bg: #334155;
+            --text: #f1f5f9;
+            --text-title: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: #475569;
+            --primary: #60a5fa;
+            --primary-bg: #1e3a8a;
+            --accent: #f87171;
+            --accent-bg: #450a0a;
+        }
+
+        /* Neon / Cyberpunk Theme */
+        [data-theme="neon"] {
+            --bg: #050515;
+            --card-bg: #0b0f29;
+            --control-bg: #161b40;
+            --text: #e2e8f0;
+            --text-title: #00f0ff;
+            --text-sub: #8b5cf6;
+            --border: #1d2860;
+            --primary: #00f0ff;
+            --primary-bg: #002b3d;
+            --accent: #ff007f;
+            --accent-bg: #3b001e;
+        }
+
+        * {
+            font-style: normal !important;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            margin: 0;
+            padding: 12px;
+            position: relative;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h1 { 
+            font-size: clamp(1.4rem, 4vw, 2.2rem); 
+            color: var(--text-title); 
+            margin: 0; 
+            font-weight: 700; 
+        }
+
+        .top-right-theme {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 6px 12px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .top-right-theme select {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            padding: 0;
+            width: auto;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .control-panel {
+            background: var(--control-bg);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label { font-weight: bold; color: var(--text); font-size: 0.95em; }
+
+        select, input[type=text], input[type=range] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 14px;
+            background: var(--card-bg);
+            color: var(--text);
+            width: 100%;
+        }
+
+        input[type=range] { cursor: pointer; accent-color: var(--primary); height: 24px; }
+
+        .btn-play {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .btn-play:hover { opacity: 0.9; }
+
+        .hint-text {
+            font-size: 0.8em;
+            color: var(--text-sub);
+        }
+
+        /* Layout 2 Columns สำหรับ หน้าจอ Desktop และ Mobile */
+        .ftc-main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .ftc-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            border-left: 5px solid var(--primary);
+            background: var(--primary-bg);
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 0;
+        }
+
+        .card.part2 {
+            border-left-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .plot-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+        }
+
+        /* กราฟปรับความสูง responsive */
+        .plot-box > div {
+            height: 340px;
+            width: 100%;
+        }
+
+        .stat-box {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            border: 1px dashed var(--border);
+            color: var(--text);
+            margin-top: auto;
+        }
+
+        .highlight { font-weight: bold; color: var(--primary); }
+        .highlight-red { font-weight: bold; color: var(--accent); }
+        
+        .error-msg {
+            color: var(--accent);
+            font-size: 0.85em;
+            display: none;
+        }
+
+        /* Responsive Breakpoint สำหรับแท็บเล็ตและมือถือ */
+        @media (max-width: 991px) {
+            .ftc-main-grid { 
+                grid-template-columns: 1fr; 
+            }
+            .container {
+                padding: 15px;
+            }
+            .plot-box > div {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h1>ทฤษฎีบทมูลฐานของแคลคูลัส (FTC)</h1>
+        <div class="top-right-theme">
+            <label for="themeSelect">🎨 ธีม:</label>
+            <select id="themeSelect">
+                <option value="light">☀️ สว่าง (Light)</option>
+                <option value="dark">🌙 มืด (Dark)</option>
+                <option value="neon">⚡ นีออน (Neon)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- แผงควบคุม -->
+    <div class="control-panel">
+        <div class="control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="funcSelect">เลือก/พิมพ์ $f(t)$: </label>
+            </div>
+            <select id="funcSelect">
+                <option value="custom">✏️ กำหนดเอง...</option>
+                <option value="0.5*t + 1">เชิงเส้น: 0.5t + 1</option>
+                <option value="Math.sin(t/3) + 1.5">คลื่น: sin(t/3) + 1.5</option>
+                <option value="0.05*t**2 + 0.5">พาราโบลา: 0.05t² + 0.5</option>
+                <option value="2">คงที่: 2</option>
+            </select>
+            <input type="text" id="customInput" value="0.5*t + 1" placeholder="เช่น t^2 + 1 หรือ sin(t) + 2">
+            <div class="hint-text">💡 ตัวอย่าง: คูณ <b>*</b> | หาร <b>/</b> | ยกกำลัง <b>^</b></div>
+            <span id="errorMsg" class="error-msg">⚠️ รูปแบบสมการไม่ถูกต้อง</span>
+        </div>
+
+        <div class="control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="aSlider">จุดเริ่มต้น ($a$): </label>
+                <span id="aVal" class="highlight" style="white-space:nowrap;">1.0 วินาที</span>
+            </div>
+            <input type="range" id="aSlider" min="0" max="49" step="0.5" value="1.0">
+            <div class="hint-text">📍 ปรับจุดเริ่มต้นการสะสม ($a$)</div>
+        </div>
+
+        <div class="control-group">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <label for="xSlider">ขอบเขตสะสม ($x$ / $b$): </label>
+                <span id="xVal" class="highlight" style="white-space:nowrap;">10.0 วินาที</span>
+            </div>
+            <input type="range" id="xSlider" min="0.1" max="50" step="0.5" value="10.0">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                <div class="hint-text">🔍 ขอบเขตสะสมปลายทาง</div>
+                <button id="playBtn" class="btn-play" onclick="togglePlay()">▶️ เล่นจำลอง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- โครงสร้างแบบ 2 คอลัมน์ (Side-by-Side บนคอม / Stack บนมือถือ) -->
+    <div class="ftc-main-grid">
+        
+        <!-- คอลัมน์ซ้าย: FTC Part 1 -->
+        <div class="ftc-column">
+            <div class="card">
+                <h2>FTC Part 1: อัตราเพิ่มของพื้นที่สะสม</h2>
+                <p>$$\frac{d}{dx} \left[ \int_{a}^{x} f(t) dt \right] = f(x)$$</p>
+                <div id="part1Desc"></div>
+            </div>
+
+            <div class="plot-box">
+                <div id="plot1"></div>
+            </div>
+
+            <div class="plot-box">
+                <div id="plot1Deriv"></div>
+            </div>
+
+            <div class="stat-box" id="boxPart1"></div>
+        </div>
+
+        <!-- คอลัมน์ขวา: FTC Part 2 -->
+        <div class="ftc-column">
+            <div class="card part2">
+                <h2>FTC Part 2: ผลรวมการเปลี่ยนแปลงเล็กๆ</h2>
+                <p>$$\int_{a}^{b} f(x) dx = F(b) - F(a)$$</p>
+                <div id="part2Desc"></div>
+            </div>
+
+            <div class="plot-box" style="flex-grow: 1; display: flex; flex-direction: column;">
+                <div id="plot2" style="height: 100%; min-height: 340px;"></div>
+            </div>
+
+            <div class="stat-box" id="boxPart2"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let isPlaying = false;
+    let animTimer = null;
+
+    function parseFunction(str) {
+        let parsed = str
+            .replace(/\^/g, '**')
+            .replace(/\bsin\b/g, 'Math.sin')
+            .replace(/\bcos\b/g, 'Math.cos')
+            .replace(/\btan\b/g, 'Math.tan')
+            .replace(/\bsqrt\b/g, 'Math.sqrt')
+            .replace(/\bexp\b/g, 'Math.exp')
+            .replace(/\bpi\b/gi, 'Math.PI')
+            .replace(/\be\b/g, 'Math.E');
+        
+        return new Function('t', `return ${parsed};`);
+    }
+
+    function createIntegrator(f) {
+        return function(xEnd) {
+            if (xEnd <= 0) return 0;
+            const steps = 600;
+            const dt = xEnd / steps;
+            let area = 0;
+            for (let i = 0; i < steps; i++) {
+                let t1 = i * dt;
+                let t2 = (i + 1) * dt;
+                area += ((f(t1) + f(t2)) / 2) * dt;
+            }
+            return area;
+        };
+    }
+
+    function togglePlay() {
+        const btn = document.getElementById('playBtn');
+        const slider = document.getElementById('xSlider');
+        const aSlider = document.getElementById('aSlider');
+        
+        if (!isPlaying) {
+            isPlaying = true;
+            btn.innerText = '⏸️ หยุดชั่วคราว';
+            if (parseFloat(slider.value) >= parseFloat(slider.max)) {
+                slider.value = (parseFloat(aSlider.value) + 0.5).toFixed(1);
+            }
+            animTimer = setInterval(() => {
+                let curr = parseFloat(slider.value);
+                let max = parseFloat(slider.max);
+                if (curr < max) {
+                    slider.value = (curr + 0.5).toFixed(1);
+                    updateAll();
+                } else {
+                    togglePlay();
+                }
+            }, 80);
+        } else {
+            isPlaying = false;
+            btn.innerText = '▶️ เล่นจำลอง';
+            clearInterval(animTimer);
+        }
+    }
+
+    function renderMathJax() {
+        if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise();
+        }
+    }
+
+    function updateAll() {
+        const theme = document.getElementById('themeSelect').value;
+        document.documentElement.setAttribute('data-theme', theme);
+
+        const funcSelectVal = document.getElementById('funcSelect').value;
+        const customInput = document.getElementById('customInput');
+        const errorMsg = document.getElementById('errorMsg');
+        
+        if (funcSelectVal !== 'custom') {
+            customInput.value = funcSelectVal;
+        }
+
+        let f, F;
+        try {
+            f = parseFunction(customInput.value);
+            let testVal = f(1);
+            if (isNaN(testVal)) throw new Error("Invalid output");
+            errorMsg.style.display = 'none';
+        } catch (e) {
+            errorMsg.style.display = 'block';
+            return;
+        }
+
+        F = createIntegrator(f);
+
+        let aBound = parseFloat(document.getElementById('aSlider').value);
+        let xBound = parseFloat(document.getElementById('xSlider').value);
+
+        if (xBound <= aBound) {
+            xBound = aBound + 0.1;
+            document.getElementById('xSlider').value = xBound;
+        }
+
+        const maxRange = Math.max(50, Math.ceil(xBound + 2)); 
+
+        document.getElementById('aVal').innerText = aBound.toFixed(1) + " วินาที";
+        document.getElementById('xVal').innerText = xBound.toFixed(1) + " วินาที";
+
+        document.getElementById('part1Desc').innerHTML = `<strong>เปรียบเทียบขับรถ:</strong> $f(t)$ คือความเร็วบนเข็มไมล์ ส่วนพื้นที่สะสมคือระยะทางรวม<br>อัตราการเพิ่มของระยะทาง ณ วินาทีนี้ = เข็มไมล์ความเร็ว ณ ปัจจุบัน`;
+        document.getElementById('part2Desc').innerHTML = `<strong>เปรียบเทียบขับรถ:</strong> ผลรวมของความเร็วย่อยๆ ตั้งแต่ $a = ${aBound.toFixed(1)}$ ถึง $b = ${xBound.toFixed(1)}$ เท่ากับ <strong>ตำแหน่งปลายทาง ลบด้วย ตำแหน่งจุดเริ่มต้น</strong>`;
+
+        const isDark = theme === 'dark' || theme === 'neon';
+        const plotBgColor = isDark ? (theme === 'neon' ? '#0b0f29' : '#1e293b') : '#ffffff';
+        const textColor = isDark ? '#f8fafc' : '#1e293b';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+        const primaryColor = theme === 'neon' ? '#00f0ff' : (isDark ? '#60a5fa' : '#2563eb');
+        const accentColor = theme === 'neon' ? '#ff007f' : (isDark ? '#f87171' : '#dc2626');
+
+        let tVals = [], fVals = [], fillTVals = [], fillFVals = [];
+        let tFull = [], FFull = [];
+
+        const dtStep = maxRange / 400;
+        for(let t = 0; t <= maxRange; t += dtStep) {
+            tFull.push(t);
+            FFull.push(F(t));
+            tVals.push(t);
+            fVals.push(f(t));
+            if(t >= aBound && t <= xBound) {
+                fillTVals.push(t);
+                fillFVals.push(f(t));
+            }
+        }
+
+        const commonLayout = {
+            paper_bgcolor: plotBgColor,
+            plot_bgcolor: plotBgColor,
+            font: { color: textColor, size: 11 },
+            margin: {t:35, b:35, l:45, r:15},
+            autosize: true,
+            xaxis: { 
+                gridcolor: gridColor, 
+                zerolinecolor: gridColor, 
+                range: [-2, maxRange + 2] 
+            },
+            yaxis: { gridcolor: gridColor, zerolinecolor: gridColor }
+        };
+
+        const plotlyConfig = {
+            responsive: true,
+            scrollZoom: true,
+            displayModeBar: false
+        };
+
+        // กราฟ 1
+        let traceF = { x: tVals, y: fVals, mode: 'lines', name: 'f(t)', line: {color: primaryColor, width: 2.5} };
+        let traceArea = { x: fillTVals, y: fillFVals, fill: 'tozeroy', mode: 'none', name: 'พื้นที่สะสม', fillcolor: theme === 'neon' ? 'rgba(0, 240, 255, 0.25)' : 'rgba(37, 99, 235, 0.3)' };
+        let tracePoint = { x: [xBound], y: [f(xBound)], mode: 'markers', name: 'จุด x', marker: {color: accentColor, size: 9} };
+
+        Plotly.newPlot('plot1', [traceF, traceArea, tracePoint], {
+            ...commonLayout,
+            title: { text: '1. กราฟอัตรา f(t) และพื้นที่สะสม', font: { size: 13 } },
+            xaxis: { ...commonLayout.xaxis, title: 'เวลา (t)' },
+            yaxis: { ...commonLayout.yaxis, title: 'อัตรา f(t)' }
+        }, plotlyConfig);
+
+        // กราฟ 2
+        const slope = f(xBound);
+        const fxVal = F(xBound);
+        const tanX = [Math.max(0, xBound - (maxRange*0.1)), Math.min(maxRange, xBound + (maxRange*0.1))];
+        const tanY = tanX.map(x => fxVal + slope * (x - xBound));
+
+        let traceFGraph = { x: tFull, y: FFull, mode: 'lines', name: 'F(x)', line: {color: '#10b981', width: 2.5} };
+        let traceFPoint = { x: [xBound], y: [fxVal], mode: 'markers', name: 'ตำแหน่ง F(x)', marker: {color: accentColor, size: 9} };
+        let traceTangent = { x: tanX, y: tanY, mode: 'lines', name: 'ความชัน', line: {color: accentColor, width: 2, dash: 'dash'} };
+
+        Plotly.newPlot('plot1Deriv', [traceFGraph, traceFPoint, traceTangent], {
+            ...commonLayout,
+            title: { text: '2. กราฟผลรวมสะสม F(x) & ความชัน', font: { size: 13 } },
+            xaxis: { ...commonLayout.xaxis, title: 'เวลา (x)' },
+            yaxis: { ...commonLayout.yaxis, title: 'ปริมาณสะสม F(x)', autorange: true }
+        }, plotlyConfig);
+
+        document.getElementById('boxPart1').innerHTML = 
+            `ณ $x = ${xBound.toFixed(1)}$: ความสูง $f(x) =$ <span class="highlight">${slope.toFixed(3)}</span> ` +
+            `| ความชัน $F'(x) =$ <span class="highlight">${slope.toFixed(3)}</span><br>` +
+            `<small style="opacity:0.75;">(ความชันกราฟล่าง = ความสูงจุดสีแดงกราฟบน)</small>`;
+
+        // กราฟ 3
+        let b = xBound;
+        let areaVal = F(b) - F(aBound);
+
+        let tracePart2F = { x: tFull, y: FFull, mode: 'lines', name: 'F(t)', line: {color: accentColor, width: 2.5} };
+        let traceA = { x: [aBound, aBound], y: [0, F(aBound)], mode: 'lines+markers', name: `จุดเริ่ม F(a)`, line: {dash: 'dot', color: textColor} };
+        let traceB = { x: [b, b], y: [0, F(b)], mode: 'lines+markers', name: `จุดจบ F(b)`, line: {dash: 'dot', color: accentColor} };
+
+        Plotly.newPlot('plot2', [tracePart2F, traceA, traceB], {
+            ...commonLayout,
+            title: { text: `คำนวณพื้นที่ตั้งแต่ a = ${aBound.toFixed(1)} ถึง b = ${b.toFixed(1)}`, font: { size: 13 } },
+            xaxis: { ...commonLayout.xaxis, title: 'x', range: [-2, maxRange + 2] },
+            yaxis: { ...commonLayout.yaxis, title: 'F(x)', autorange: true }
+        }, plotlyConfig);
+
+        document.getElementById('boxPart2').innerHTML = 
+            `พื้นที่ใต้กราฟรวม $\\int_{${aBound.toFixed(1)}}^{${b.toFixed(1)}} f(x)dx =$ <span class="highlight-red">${areaVal.toFixed(3)}</span><br>` +
+            `ผลลัพธ์สุทธิปลายทาง $F(b) - F(a) =$ <span class="highlight-red">${F(b).toFixed(3)} - ${F(aBound).toFixed(3)} = ${areaVal.toFixed(3)}</span>`;
+
+        renderMathJax();
+    }
+
+    // Resize graphs on window resize
+    window.addEventListener('resize', () => {
+        Plotly.Plots.resize('plot1');
+        Plotly.Plots.resize('plot1Deriv');
+        Plotly.Plots.resize('plot2');
+    });
+
+    document.getElementById('themeSelect').addEventListener('change', updateAll);
+    document.getElementById('funcSelect').addEventListener('change', (e) => {
+        if (e.target.value !== 'custom') {
+            document.getElementById('customInput').value = e.target.value;
+        }
+        updateAll();
+    });
+    document.getElementById('customInput').addEventListener('input', () => {
+        document.getElementById('funcSelect').value = 'custom';
+        updateAll();
+    });
+    document.getElementById('aSlider').addEventListener('input', updateAll);
+    document.getElementById('xSlider').addEventListener('input', updateAll);
+
+    updateAll();
+</script>
+
+</body>
+</html>
